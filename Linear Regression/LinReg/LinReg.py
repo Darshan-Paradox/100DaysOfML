@@ -34,9 +34,19 @@ class Model:
             H = X.dot(self.W) + self.B
             E = Y - H
 
-            cost.append((1/(2*len(Y)))*(E.T.dot(E)).item())
+            L = 0
+            _L = 0
 
-            self.W = self.W + self.lr*(1/len(Y))*(X.T.dot(E))
+            if self.reg == "L1":
+                L = self.lamda * np.sum(np.abs(W))
+                _L = self.lamda * np.sign(W)
+            elif self.reg == "L2":
+                L = self.lamda * np.sum(np.square(W))
+                _L = self.lamda * W
+
+            cost.append((1/(2*len(Y)))*(E.T.dot(E) + L).item())
+
+            self.W = self.W + self.lr*(1/len(Y))*(X.T.dot(E)) - self.lr*_L
             self.B = self.B + self.lr*(1/len(Y))*np.sum(E)
 
         return cost
