@@ -36,6 +36,18 @@ class Model:
 
             L = 0
             _L = 0
+            
+            if self.gd == "mgd":
+                indices = self.__mini_batch_indices(0.7)
+                
+                X = self.__mini_batch(indices, X)
+                E = self.__mini_batch(indices, E)
+                
+            elif self.gd == "sgd":
+                index = np.random.randint(len(E));
+                
+                E = np.array([E[index]])
+                X = np.array([X[index]])
 
             if self.reg == "L1":
                 L = self.lamda * np.sum(np.abs(W))
@@ -50,6 +62,19 @@ class Model:
             self.B = self.B + self.lr*(1/len(Y))*np.sum(E)
 
         return cost
+    
+    def __mini_batch_indices(self, frac):
+        indices = np.random.permutation(A.shape[0])
+        indices = indices[:int(frac*len(indices))]
+        
+        return indices
+    
+    def __mini_batch(self, indices, A):
+        dummy = []
+        for i in indices:
+            dummy.append(A[i])
+        
+        return np.array(dummy)
 
     def test(self, X, Y):
         return X.dot(self.W) + self.B
