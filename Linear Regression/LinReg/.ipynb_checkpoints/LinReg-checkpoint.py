@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-ARGS = {"gradient_descent": "BGD",
+ARGS = {"batch_size": None,
         "regularisation": None,
         "lambda": 0,
         "plots": True}
@@ -12,7 +12,7 @@ class Model:
         self.epochs = epochs # number of iterations
         self.lamda = args["lambda"] # regularisation constant
 
-        self.gd = args["gradient_descent"] # gradient descent method
+        self.batch_size = args["batch"]
         self.reg = args["regularisation"] # regularisation method
         self.plots = args["plots"] # plots
 
@@ -37,17 +37,14 @@ class Model:
             L = 0
             _L = 0
             
-            if self.gd == "mgd":
-                indices = self.__mini_batch_indices(0.7)
+            _X = X
+            _E = E
+            
+            if self.batch_size > 0 and self.batch_size < len(E):
+                index = np.random.randint(0, X.shape[0], self.batch_size)
                 
-                X = self.__mini_batch(indices, X)
-                E = self.__mini_batch(indices, E)
-                
-            elif self.gd == "sgd":
-                index = np.random.randint(len(E));
-                
-                E = np.array([E[index]])
-                X = np.array([X[index]])
+                _X = X[[index]]
+                _E = E[[index]]
 
             if self.reg == "L1":
                 L = self.lamda * np.sum(np.abs(W))
@@ -56,25 +53,25 @@ class Model:
                 L = self.lamda * np.sum(np.square(W))
                 _L = self.lamda * W
 
-            cost.append((1/(2*len(Y)))*(E.T.dot(E) + L).item())
+            cost.append((1/(2*len(_E)))*(_E.T.dot(_E) + L).item())
 
-            self.W = self.W + self.lr*(1/len(Y))*(X.T.dot(E)) - self.lr*_L
-            self.B = self.B + self.lr*(1/len(Y))*np.sum(E)
+            self.W = self.W + self.lr*(1/len(_E))*(_X.T.dot(_E)) - self.lr*_L
+            self.B = self.B + self.lr*(1/len(_E))*np.sum(_E, axis=0)
 
         return cost
-    
-    def __mini_batch_indices(self, frac):
-        indices = np.random.permutation(A.shape[0])
-        indices = indices[:int(frac*len(indices))]
-        
-        return indices
-    
-    def __mini_batch(self, indices, A):
-        dummy = []
-        for i in indices:
-            dummy.append(A[i])
-        
-        return np.array(dummy)
 
     def test(self, X, Y):
-        return X.dot(self.W) + self.B
+        H = X.dot(self.W) + self.B
+        summary = self.test_summary(X, Y)
+        return H, summary
+    
+    def test_summary(X, Y):
+        MAE = np.abs(Y - (X.dot(self.W) + self.B)).mean()
+        MSE = np.square(Y - (X.dot(self.W) + self.B)).mean()
+        R_2 = 0
+        
+        summary = {"MAE": MAE,
+                  "MSE": MSE,
+                  "R_2": R_2}
+        
+        return summary
