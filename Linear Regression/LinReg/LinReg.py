@@ -62,13 +62,14 @@ class Model:
 
     def test(self, X, Y):
         H = X.dot(self.W) + self.B
-        summary = self.test_summary(X, Y)
+        summary = self.test_summary(H, Y)
+
         return H, summary
     
-    def test_summary(X, Y):
-        MAE = np.abs(Y - (X.dot(self.W) + self.B)).mean()
-        MSE = np.square(Y - (X.dot(self.W) + self.B)).mean()
-        R_2 = 0
+    def test_summary(H, Y):
+        MAE = np.abs(Y - H).mean()
+        MSE = np.square(Y - H).mean()
+        R_2 = 1 - ((Y - H).var()/ Y.var())
         
         summary = {"MAE": MAE,
                   "MSE": MSE,
